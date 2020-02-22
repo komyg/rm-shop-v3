@@ -26,7 +26,7 @@ After you cloned the repository, run `yarn install` to download the necessary pa
 
 In this tutorial we are going to use Enzime and Jest to run unit tests on our code. The Enzyme configuration below was taken from the Create React App [official documentation](https://create-react-app.dev/docs/running-tests).
 
-First let's add the necessary packages: `yarn add -D enzyme @types/enzyme enzyme-adapter-react-16 react-test-renderer jest-enzyme`.
+First let's add the necessary packages: `yarn add -D enzyme @types/enzyme enzyme-adapter-react-16 react-test-renderer jest-enzyme wait-for-expect`.
 
 Then let's setup our tests by creating the file: *src/setupTests.js* and pasting the contents below:
 
@@ -42,9 +42,13 @@ configure({
 });
 ```
 
+Also delete the *src/setupTests.ts* file if you have it.
+
 # Testing the resolvers
 
 To test our resolvers, we are going to setup a mock Apollo Client and check the inputs and outputs from them. A good way see what comes in and out of a resolver is to use `console.log` statements and create the tests accordingly.
+
+## `setUnitPrice`
 
 The first resolver we are going to test is the `setUnitPrice`. Let's start by creating a test file: *resolvers/set-unit-price.resolver.test.ts* and then pasting the contents below on it:
 
@@ -81,7 +85,9 @@ The purpose of this resolver is to assign the price of 10 USD to Rick and Morty 
 
 In this case we don't need to setup a mock client for the test to work, however we are telling the compiler that the `mockCharacter` and the `context` are of the `any` type, so that the compiler won't complain that the `mockCharacter` is missing some properties and that we can't assign `null` to the context.
 
-Next we will test the `increaseChosenQuantityResolver`. To do this, create the file *resolvers/increase-chosen-quantity.resolver.test.ts* and paste the contents below:
+## `increaseChosenQuantity`
+
+Next we will test the `increaseChosenQuantity`. To do this, create the file *resolvers/increase-chosen-quantity.resolver.test.ts* and paste the contents below:
 
 ```ts
 import { InMemoryCache, IntrospectionFragmentMatcher } from 'apollo-cache-inmemory';
@@ -186,6 +192,8 @@ There is a lot going on in this file, so we are going to break it down:
 - First we begin by setting up a mock Apollo Client complete with a `fragmentMatcher`, an `InMemoryCache` and the resolver that we want to test. Note that both the client and the cache should have the same configurations as the real client, but with the `addTypename` property as false.
 - Then we `InMemoryCache` with a mock state by passing the `mockData` variable to the `cache.writeData` function. It is important to mention that all fields that are part of any query, fragment or mutation that is ran on this test, must be present on the mock data, otherwise the Apollo will throw an error. For example, if we omit the character's `name` parameter in the `mockData`, then the Apollo will throw an error, because the `characterData` fragment that is used inside the `increaseChosenQuantity` resolver contains this field.
 - Once the cache is initialized, we run two tests to see if the `Character` and the `ShoppingCart` are being successfully updated in the cache when the mutation is ran an the resolver is called.
+
+## `decreateChosenQuantity`
 
 Next, let's create a test for the `decreseChosenQuantity` resolver. Start by creating the file: *resolvers/decrease-chosen-quantity.resolver.test.ts* and pasting the contents below:
 
@@ -323,6 +331,8 @@ const mockData = {
 
 This test is very similar to the one we created for the `increaseChosenQuantity` resolver, but in this case the cache starts with an action figure that has already been selected by the user. Also we added two more tests to make sure that we will not decrease the quantities and the price to a value that is less than 0.
 
+## `getCharacter`
+
 Finally, let's add a test for the last resolver: `getCharacter`. Create a new file *resolvers/get-character.resolver.test.ts* and paste the contents below:
 
 ```ts
@@ -391,9 +401,15 @@ const mockData = {
 };
 ```
 
+This test just runs the query through the Apollo and checks the result.
+
 # Testing the components
 
-Now let's begin testing the components themselves. First let's begin with the `App` component. Create the file: *components/app/app.test.tsx* and paste the contents below:
+Now let's begin testing the components themselves.
+
+## `App`
+
+First let's begin with the `App` component. Create the file: *components/app/app.test.tsx* and paste the contents below:
 
 ```tsx
 import React from 'react';
@@ -409,6 +425,8 @@ describe('App Component', () => {
 ```
 
 This test is just a [smoke test](https://en.wikipedia.org/wiki/Smoke_testing_(software)) to see if anything will break if we mount this component. Since this component doesn't do much else besides instating other components, just this smoke test is enough.
+
+## `CharacterData`
 
 Now let's also create a smoke test fo the `CharacterData` component in the file: *components/character-data/character-data.test.tsx*:
 
@@ -446,3 +464,36 @@ const mockCharacter: any = {
 ```
 
 In both tests above, we are using Enzyme's `shallow`. By using it, we are telling Enzyme that we just want to mount the component that we are passing to it. It can and will ignore all subcomponents. This is why we don't have to bother on creating mocks for the children of these two components.
+
+## The Apollo Mocked Provider
+
+For the next components that we will test we will require the `ApolloMockedProvider` to simulate graphql queries and mutations. The `ApolloMockedProvider` is available on a separate package: `yarn add -D @apollo/react-testing`.
+
+## `CharacterTable`
+
+Now, let's create a new test for the `CharacterTable` component. Since it contains a graphql query, we will need to use the `MockedProvider` to simulate the graphql elements.
+
+To start, update the `CharacterTable` component in the *components/character-table/character-table.tsx* file with the content below. We've added a few `ids` to the components, so it is easier to query for them in the tests:
+
+```tsx
+// Query state management
+if (loading) {
+  return <CircularProgress id='progress' />;
+} else if (error) {
+  console.error(error);
+  return (
+    <Typography variant='h5' id='error-msg'>
+      Error retrieving data, please reload the page to try again.
+    </Typography>
+  );
+} else if (!data || !data.characters || !data.characters.results) {
+  return (
+    <Typography variant='h5' id='no-data-msg'>
+      No data available, please reload the page to try again.
+    </Typography>
+  );
+}
+```
+
+Now create the file *components/character-table/character-table.spec.tsx* and paste the content below:
+

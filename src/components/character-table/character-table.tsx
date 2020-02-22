@@ -21,17 +21,19 @@ export default function CharacterTable(props: Props): ReactElement {
 
   // Query state management
   if (loading) {
-    return <CircularProgress />;
+    return <CircularProgress id='progress' />;
   } else if (error) {
     console.error(error);
     return (
-      <Typography variant='h5'>
+      <Typography variant='h5' id='error-msg'>
         Error retrieving data, please reload the page to try again.
       </Typography>
     );
   } else if (!data || !data.characters || !data.characters.results) {
     return (
-      <Typography variant='h5'>No data available, please reload the page to try again.</Typography>
+      <Typography variant='h5' id='no-data-msg'>
+        No data available, please reload the page to try again.
+      </Typography>
     );
   }
 
