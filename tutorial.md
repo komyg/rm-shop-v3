@@ -390,3 +390,59 @@ const mockData = {
   },
 };
 ```
+
+# Testing the components
+
+Now let's begin testing the components themselves. First let's begin with the `App` component. Create the file: *components/app/app.test.tsx* and paste the contents below:
+
+```tsx
+import React from 'react';
+import { shallow } from 'enzyme';
+import App from './app';
+
+describe('App Component', () => {
+  it('should mount', () => {
+    const wrapper = shallow(<App />);
+    expect(wrapper).toBeTruthy();
+  });
+});
+```
+
+This test is just a [smoke test](https://en.wikipedia.org/wiki/Smoke_testing_(software)) to see if anything will break if we mount this component. Since this component doesn't do much else besides instating other components, just this smoke test is enough.
+
+Now let's also create a smoke test fo the `CharacterData` component in the file: *components/character-data/character-data.test.tsx*:
+
+```tsx
+import React from 'react';
+import { shallow } from 'enzyme';
+import CharacterData from './character-data';
+
+describe('Character Data', () => {
+  it('should mount', () => {
+    const wrapper = shallow(<CharacterData character={mockCharacter} />);
+    expect(wrapper).toBeTruthy();
+  });
+});
+
+const mockCharacter: any = {
+  id: '1',
+  __typename: 'Character',
+  name: 'Rick Sanchez',
+  species: 'Human',
+  image: 'https://rickandmortyapi.com/api/character/avatar/1.jpeg',
+  chosenQuantity: 1,
+  unitPrice: 10,
+  origin: {
+    id: '1',
+    __typename: 'Location',
+    name: 'Earth (C-137)',
+  },
+  location: {
+    id: '20',
+    __typename: 'Location',
+    name: 'Earth (Replacement Dimension)',
+  },
+};
+```
+
+In both tests above, we are using Enzyme's `shallow`. By using it, we are telling Enzyme that we just want to mount the component that we are passing to it. It can and will ignore all subcomponents. This is why we don't have to bother on creating mocks for the children of these two components.
