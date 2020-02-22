@@ -186,3 +186,139 @@ There is a lot going on in this file, so we are going to break it down:
 - First we begin by setting up a mock Apollo Client complete with a `fragmentMatcher`, an `InMemoryCache` and the resolver that we want to test. Note that both the client and the cache should have the same configurations as the real client, but with the `addTypename` property as false.
 - Then we `InMemoryCache` with a mock state by passing the `mockData` variable to the `cache.writeData` function. It is important to mention that all fields that are part of any query, fragment or mutation that is ran on this test, must be present on the mock data, otherwise the Apollo will throw an error. For example, if we omit the character's `name` parameter in the `mockData`, then the Apollo will throw an error, because the `characterData` fragment that is used inside the `increaseChosenQuantity` resolver contains this field.
 - Once the cache is initialized, we run two tests to see if the `Character` and the `ShoppingCart` are being successfully updated in the cache when the mutation is ran an the resolver is called.
+
+Next, let's create a test for the `decreseChosenQuantity` resolver. Start by creating the file: *resolvers/decrease-chosen-quantity.resolver.test.ts* and pasting the contents below:
+
+```ts
+import { InMemoryCache, IntrospectionFragmentMatcher } from 'apollo-cache-inmemory';
+import ApolloClient from 'apollo-client';
+import fragmentData from '../generated/fragment-matcher.json';
+import {
+  CharacterDataFragment,
+  CharacterDataFragmentDoc,
+  DecreaseChosenQuantityDocument,
+  DecreaseChosenQuantityMutation,
+  GetShoppingCartDocument,
+  GetShoppingCartQuery,
+} from '../generated/graphql';
+import decreaseChosenQuantity from './decrease-chosen-quantity.resolver';
+
+describe('Add To Cart Resolver', () => {
+  let cache: InMemoryCache;
+  let client: ApolloClient<any>;
+
+  beforeEach(() => {
+    // Create mock fragment matcher
+    const fragmentMatcher = new IntrospectionFragmentMatcher({
+      introspectionQueryResultData: fragmentData,
+    });
+
+    // Create mock client and cache
+    cache = new InMemoryCache({ addTypename: false, fragmentMatcher, freezeResults: true });
+    client = new ApolloClient({
+      cache,
+      resolvers: { Mutation: { decreaseChosenQuantity } }, // Resolver we want to test
+      assumeImmutableResults: true,
+    });
+
+    // Initialize the cache with the desired state
+    cache.writeData({ data: mockData });
+  });
+
+  it('should decrease a character chosen quantity', async () => {
+    const result = await client.mutate<DecreaseChosenQuantityMutation>({
+      mutation: DecreaseChosenQuantityDocument,
+      variables: { input: { id: '1' } },
+    });
+    expect(result.data?.decreaseChosenQuantity).toBe(true);
+
+    const character = client.readFragment<CharacterDataFragment>({
+      fragment: CharacterDataFragmentDoc,
+      id: 'Character:1',
+    });
+    expect(character?.chosenQuantity).toBe(0);
+  });
+
+  it('should update the shopping cart', async () => {
+    const result = await client.mutate<DecreaseChosenQuantityMutation>({
+      mutation: DecreaseChosenQuantityDocument,
+      variables: { input: { id: '1' } },
+    });
+    expect(result.data?.decreaseChosenQuantity).toBe(true);
+
+    const shoppingCartQuery = client.readQuery<GetShoppingCartQuery>({
+      query: GetShoppingCartDocument,
+    });
+    expect(shoppingCartQuery?.shoppingCart.numActionFigures).toBe(0);
+    expect(shoppingCartQuery?.shoppingCart.totalPrice).toBe(0);
+  });
+
+  it('should not decrease the chosen quantity below 0', async () => {
+    await client.mutate<DecreaseChosenQuantityMutation>({
+      mutation: DecreaseChosenQuantityDocument,
+      variables: { input: { id: '1' } },
+    });
+    await client.mutate<DecreaseChosenQuantityMutation>({
+      mutation: DecreaseChosenQuantityDocument,
+      variables: { input: { id: '1' } },
+    });
+
+    const character = client.readFragment<CharacterDataFragment>({
+      fragment: CharacterDataFragmentDoc,
+      id: 'Character:1',
+    });
+    expect(character?.chosenQuantity).toBe(0);
+  });
+
+  it('should not decrease the shopping cart price and quantity below 0', async () => {
+    await client.mutate<DecreaseChosenQuantityMutation>({
+      mutation: DecreaseChosenQuantityDocument,
+      variables: { input: { id: '1' } },
+    });
+    await client.mutate<DecreaseChosenQuantityMutation>({
+      mutation: DecreaseChosenQuantityDocument,
+      variables: { input: { id: '1' } },
+    });
+
+    const shoppingCartQuery = client.readQuery<GetShoppingCartQuery>({
+      query: GetShoppingCartDocument,
+    });
+    expect(shoppingCartQuery?.shoppingCart.numActionFigures).toBe(0);
+    expect(shoppingCartQuery?.shoppingCart.totalPrice).toBe(0);
+  });
+});
+
+const mockData = {
+  characters: {
+    results: [
+      {
+        id: '1',
+        __typename: 'Character',
+        name: 'Rick Sanchez',
+        species: 'Human',
+        image: 'https://rickandmortyapi.com/api/character/avatar/1.jpeg',
+        chosenQuantity: 1,
+        unitPrice: 10,
+        origin: {
+          id: '1',
+          __typename: 'Location',
+          name: 'Earth (C-137)',
+        },
+        location: {
+          id: '20',
+          __typename: 'Location',
+          name: 'Earth (Replacement Dimension)',
+        },
+      },
+    ],
+  },
+  shoppingCart: {
+    __typename: 'ShoppingCart',
+    id: btoa('ShoppingCart:1'),
+    totalPrice: 10,
+    numActionFigures: 1,
+  },
+};
+```
+
+This test is very similar to the one we created for the `increaseChosenQuantity` resolver, but in this case the cache starts with an action figure that has already been selected by the user. Also we added two more tests to make sure that we will not decrease the quantities and the price to a value that is less than 0.
