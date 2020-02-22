@@ -20,3 +20,25 @@ To begin, clone the [repository](https://github.com/komyg/rm-shop-v2) that we us
 
 After you cloned the repository, run `yarn install` to download the necessary packages.
 
+# Configuring Enzyme
+
+In this tutorial we are going to use Enzime and Jest to run unit tests on our code. The Enzyme configuration below was taken from the Create React App [official documentation](https://create-react-app.dev/docs/running-tests).
+
+First let's add the necessary packages: `yarn add -D enzyme @types/enzyme enzyme-adapter-react-16 react-test-renderer jest-enzyme`.
+
+Then let's setup our tests by creating the file: *src/setupTests.js* and pasting the contents below:
+
+```js
+import {
+  configure
+} from 'enzyme';
+import Adapter from 'enzyme-adapter-react-16';
+import 'jest-enzyme';
+
+configure({
+  adapter: new Adapter()
+});
+```
+
+# Testing the resolvers
+
