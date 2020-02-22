@@ -1,10 +1,10 @@
-# Rick and Morty Shop V2
+# Rick and Morty Shop V3
 
-This project is the part two of a three part tutorial about creating a simple shopping cart application using React and Apollo Grapqhl. Links for the other parts are here:
+This project is the part three of a three part tutorial about creating a simple shopping cart application using React and Apollo Grapqhl. Links for the other parts are here:
 
 - [Part 1: Retrieve and display data from a remote server.](https://github.com/komyg/rm-shop-v1/blob/master/tutorial.md)
 - [Part 2: Use Apollo to manage the app's local state.](https://github.com/komyg/rm-shop-v2/blob/master/tutorial.md)
-- Part 3: Add unit tests.
+- [Part 3: Add unit tests.](https://github.com/komyg/rm-shop-v3/blob/master/tutorial.md)
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
