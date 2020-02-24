@@ -501,6 +501,171 @@ if (loading) {
 
 Now create the file *components/character-table/character-table.spec.tsx* and paste the content below:
 
+```tsx
+import React from 'react';
+import { mount, ReactWrapper } from 'enzyme';
+import CharacterTable from './character-table';
+import { MockedProvider } from '@apollo/react-testing';
+import { act } from 'react-dom/test-utils';
+import { GetCharactersDocument } from '../../generated/graphql';
+import waitForExpect from 'wait-for-expect';
+
+jest.mock('../character-data/character-data', () => ({
+  __esModule: true,
+  default: function CharacterData() {
+    return <tr />;
+  },
+}));
+
+describe('Character Table', () => {
+  it('should show a spinner when loading the data', async () => {
+    let wrapper;
+    await act(async () => {
+      wrapper = mount(
+        <MockedProvider addTypename={false} mocks={[]} resolvers={{}}>
+          <CharacterTable />
+        </MockedProvider>
+      );
+    });
+
+    expect(wrapper).toBeTruthy();
+    expect(wrapper).toContainMatchingElement('#progress');
+  });
+
+  it('should successfully dislay the character data', async () => {
+    let wrapper: ReactWrapper;
+    await act(async () => {
+      wrapper = mount(
+        <MockedProvider addTypename={false} mocks={[mockCharacters]} resolvers={{}}>
+          <CharacterTable />
+        </MockedProvider>
+      );
+    });
+
+    await waitForExpect(() => {
+      wrapper.update();
+      expect(wrapper).toContainMatchingElement('CharacterData');
+    });
+  });
+
+  it('should handle an error', async () => {
+    let wrapper: ReactWrapper;
+
+    await act(async () => {
+      wrapper = mount(
+        <MockedProvider addTypename={false} mocks={[mockWithError]} resolvers={{}}>
+          <CharacterTable />
+        </MockedProvider>
+      );
+    });
+
+    await waitForExpect(() => {
+      wrapper.update();
+      expect(wrapper).toContainMatchingElement('#error-msg');
+    });
+  });
+
+  it('should handle when there is no data', async () => {
+    let wrapper: ReactWrapper;
+
+    await act(async () => {
+      wrapper = mount(
+        <MockedProvider addTypename={false} mocks={[emtpyMock]} resolvers={{}}>
+          <CharacterTable />
+        </MockedProvider>
+      );
+    });
+
+    await waitForExpect(() => {
+      wrapper.update();
+      expect(wrapper).toContainMatchingElement('#no-data-msg');
+    });
+  });
+});
+
+const mockCharacters = {
+  request: { query: GetCharactersDocument },
+  result: {
+    data: {
+      characters: {
+        __typename: 'Characters',
+        results: [
+          {
+            id: '1',
+            __typename: 'Character',
+            name: 'Rick Sanchez',
+            image: 'https://rickandmortyapi.com/api/character/avatar/1.jpeg',
+            species: 'Human',
+            chosenQuantity: 0,
+            unitPrice: 0,
+            origin: {
+              id: '1',
+              __typename: 'Location',
+              name: 'Earth (C-137)',
+            },
+            location: {
+              id: '20',
+              __typename: 'Location',
+              name: 'Earth (Replacement Dimension)',
+            },
+          },
+          {
+            id: '2',
+            __typename: 'Character',
+            name: 'Morty Smith',
+            image: 'https://rickandmortyapi.com/api/character/avatar/2.jpeg',
+            species: 'Human',
+            chosenQuantity: 0,
+            unitPrice: 0,
+            origin: {
+              id: '1',
+              __typename: 'Location',
+              name: 'Earth (C-137)',
+            },
+            location: {
+              id: '20',
+              __typename: 'Location',
+              name: 'Earth (Replacement Dimension)',
+            },
+          },
+        ],
+      },
+    },
+  },
+};
+
+const mockWithError = {
+  request: { query: GetCharactersDocument },
+  error: new Error('Network Error'),
+};
+
+const emtpyMock = {
+  request: { query: GetCharactersDocument },
+  result: {
+    data: {
+      characters: null,
+    },
+  },
+};
+```
+
+There is quite a bit going on in this file, so let's break it down:
+
+- First we created a mock of the `CharacterData` component. We've done this to make sure that we are testing the `CharacterTable` component in isolation.
+- The mock itself contains `default` parameter, because the `CharacterData` component is exported as the module default (`export default function CharacterData`).
+- Then we have our first test that checks if we show a spinner while loading the data from the graphql server. We do this, by mounting the whole component wrapped by the `MockedProvider`. Notice that we used `mount` instead of `shallow`, this is because the `shallow` function would only mount the first level component, which in this case is the `MockedProvider`, so we use `mount` to mount the whole component tree. This is also why we mocked the `CharacterData` component, because the `mount` function would also mount it and we want to test our components in isolation.
+- In this test, we don't have to pass any mocks to it, because we are not waiting for them to be resolved. We just want to see if the spinner will be shown when the query is loading.
+- Also notice that when we are making changes to our components, we are using the [act](https://reactjs.org/docs/testing-recipes.html#act) function.
+- After this we have a test that checks if we display the `CharacterData` components if our data loads successfully (keep in mind that this is not the real `CharacterData` component, but rather our mock).
+- In this test, we configure a mock which contains the expected input and output data that is handled by the graphql.
+- Here we also use the `waitForExpect` function to wait until the mocks resolve before making any assertions, otherwise we would only see the loading spinner.
+- We have two more tests, that check if we can gracefully handle an error and when there is no data available (notice that the error mock has an `error` parameter instead of a `result` parameter).
+- At the end of the file, we have our mocks. In here, the same rule we applied with resolvers tests is valid: all of the fields that you requested in a query or a mutation must be returned in the mock. If a single field is missing, Apollo will throw an error.
+- You can take a look at [Apollo's official documentation](https://www.apollographql.com/docs/react/development-testing/testing/) if you want to know more about the tests.
+
+>Note: in this test suite it is very impotant to set the `resolver` param in the `MockedProvider`, even if it is just an empty object. This is because our query has two `@client` fields (`chosenQuantity` and `unitPrice`) and if we don't set the `resolver` param, the `MockedProvider` will always throw a **ApolloError: Network error: No more mocked responses for the query: query GetCharacters** error.
+
+
 ## `CharacterQuantity`
 
 In this component, we would like to test that a mutation to increase or decrease the character's quantity is called whenever we click one of the buttons. First let's add an `id` property to both so that we can test them more easily, by changing the *components/character-quantity/character-quantity.tsx* component:

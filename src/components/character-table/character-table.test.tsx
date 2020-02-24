@@ -1,5 +1,5 @@
 import React from 'react';
-import { mount } from 'enzyme';
+import { mount, ReactWrapper } from 'enzyme';
 import CharacterTable from './character-table';
 import { MockedProvider } from '@apollo/react-testing';
 import { act } from 'react-dom/test-utils';
@@ -15,59 +15,66 @@ jest.mock('../character-data/character-data', () => ({
 
 describe('Character Table', () => {
   it('should show a spinner when loading the data', async () => {
+    let wrapper;
     await act(async () => {
-      const wrapper = mount(
-        <MockedProvider addTypename={false} mocks={[mockCharacters]} resolvers={{}}>
+      wrapper = mount(
+        <MockedProvider addTypename={false} mocks={[]} resolvers={{}}>
           <CharacterTable />
         </MockedProvider>
       );
-      expect(wrapper).toBeTruthy();
-      expect(wrapper).toContainMatchingElement('#progress');
     });
+
+    expect(wrapper).toBeTruthy();
+    expect(wrapper).toContainMatchingElement('#progress');
   });
 
   it('should successfully dislay the character data', async () => {
+    let wrapper: ReactWrapper;
     await act(async () => {
-      const wrapper = mount(
+      wrapper = mount(
         <MockedProvider addTypename={false} mocks={[mockCharacters]} resolvers={{}}>
           <CharacterTable />
         </MockedProvider>
       );
+    });
 
-      await waitForExpect(() => {
-        wrapper.update();
-        expect(wrapper).toContainMatchingElement('CharacterData');
-      });
+    await waitForExpect(() => {
+      wrapper.update();
+      expect(wrapper).toContainMatchingElement('CharacterData');
     });
   });
 
   it('should handle an error', async () => {
+    let wrapper: ReactWrapper;
+
     await act(async () => {
-      const wrapper = mount(
+      wrapper = mount(
         <MockedProvider addTypename={false} mocks={[mockWithError]} resolvers={{}}>
           <CharacterTable />
         </MockedProvider>
       );
+    });
 
-      await waitForExpect(() => {
-        wrapper.update();
-        expect(wrapper).toContainMatchingElement('#error-msg');
-      });
+    await waitForExpect(() => {
+      wrapper.update();
+      expect(wrapper).toContainMatchingElement('#error-msg');
     });
   });
 
   it('should handle when there is no data', async () => {
+    let wrapper: ReactWrapper;
+
     await act(async () => {
-      const wrapper = mount(
+      wrapper = mount(
         <MockedProvider addTypename={false} mocks={[emtpyMock]} resolvers={{}}>
           <CharacterTable />
         </MockedProvider>
       );
+    });
 
-      await waitForExpect(() => {
-        wrapper.update();
-        expect(wrapper).toContainMatchingElement('#no-data-msg');
-      });
+    await waitForExpect(() => {
+      wrapper.update();
+      expect(wrapper).toContainMatchingElement('#no-data-msg');
     });
   });
 });
