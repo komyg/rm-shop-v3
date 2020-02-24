@@ -26,11 +26,11 @@ export default function ShoppingCartBtn(): ReactElement {
   const { data } = useGetShoppingCartQuery();
 
   if (!data || data.shoppingCart.numActionFigures <= 0) {
-    return <Box className={classes.root} />;
+    return <Box className={classes.root} id='empty-btn' />;
   }
 
   return (
-    <Box className={classes.root}>
+    <Box className={classes.root} id='shopping-cart-btn'>
       <Fab variant='extended' color='primary'>
         <Box>
           <ShoppingCartIcon className={classes.btnElement} />

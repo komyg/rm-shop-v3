@@ -502,22 +502,13 @@ Now create the file *components/character-table/character-table.spec.tsx* and pa
 In this component, we would like to test that a mutation to increase or decrease the character's quantity is called whenever we click one of the buttons. First let's add an `id` property to both so that we can test them more easily, by changing the *components/character-quantity/character-quantity.tsx* component:
 
 ```tsx
-return (
-  <Box display='flex' alignItems='center'>
-    <IconButton
-      color='primary'
-      disabled={props.chosenQuantity <= 0}
-      onClick={onDecreaseQty}
-      id='decrease-btn'
-    >
-      <ChevronLeftIcon />
-    </IconButton>
-    <Typography>{props.chosenQuantity}</Typography>
-    <IconButton color='primary' onClick={onIncreaseQty} id='increase-btn'>
-      <ChevronRightIcon />
-    </IconButton>
-  </Box>
-);
+<IconButton color='primary' disabled={props.chosenQuantity <= 0} onClick={onDecreaseQty} id='decrease-btn'>
+  <ChevronLeftIcon />
+</IconButton>
+<Typography>{props.chosenQuantity}</Typography>
+<IconButton color='primary' onClick={onIncreaseQty} id='increase-btn'>
+  <ChevronRightIcon />
+</IconButton>
 ```
 
 Now, create the file: *components/character-quantity/character-quantity.test.tsx and paste the contents below:
@@ -614,3 +605,98 @@ describe('Character Quantity', () => {
 ```
 
 Notice that we've added a function as the result value of both mutations instead of plain objects. The Apollo `MockedProvider` supports either objects, functions and promises as the `result` property.
+
+## `ShoppingCart`
+
+For this component, we are going to check if it appears when we have one or more action figures selected. To simplify our tests open the file *components/shopping-cart-btn/shopping-cart-btn.tsx* and add `id` param to the `<Box />` that is returned when there are no action figures selected:
+
+```tsx
+if (!data || data.shoppingCart.numActionFigures <= 0) {
+  return <Box className={classes.root} id='empty-btn' />;
+}
+```
+
+Let's also add an `id` param to the `<Box />` that contains the actual button:
+
+```tsx
+return (
+  <Box className={classes.root} id='shopping-cart-btn'>
+    {/* [...] */}
+  </Box>
+);
+```
+
+Now create a new file: *components/shopping-cart-btn/shopping-cart-btn.test.tsx*  and paste the contents below:
+
+```tsx
+import React from 'react';
+import { act } from 'react-dom/test-utils';
+import { GetShoppingCartDocument } from '../../generated/graphql';
+import { mount } from 'enzyme';
+import { MockedProvider, wait } from '@apollo/react-testing';
+import ShoppingCartBtn from './shopping-cart-btn';
+import waitForExpect from 'wait-for-expect';
+
+describe('Shopping Cart Btn', () => {
+  it('should not show the button when there are 0 action figures selected', async () => {
+    await act(async () => {
+      const wrapper = mount(
+        <MockedProvider addTypename={false} mocks={[mockEmtpyCart]}>
+          <ShoppingCartBtn />
+        </MockedProvider>
+      );
+      expect(wrapper).toBeTruthy();
+
+      await wait(10);
+      wrapper.update();
+      expect(wrapper).toContainMatchingElement('#empty-btn');
+      expect(wrapper).not.toContainMatchingElement('#shopping-cart-btn');
+    });
+  });
+
+  it('should show the button when there is 1 or more action figures selected', async () => {
+    await act(async () => {
+      const wrapper = mount(
+        <MockedProvider addTypename={false} mocks={[mockShoppingCart]}>
+          <ShoppingCartBtn />
+        </MockedProvider>
+      );
+      expect(wrapper).toBeTruthy();
+
+      await waitForExpect(() => {
+        wrapper.update();
+        expect(wrapper).not.toContainMatchingElement('#empty-btn');
+        expect(wrapper).toContainMatchingElement('#shopping-cart-btn');
+      });
+    });
+  });
+});
+
+const mockEmtpyCart = {
+  request: { query: GetShoppingCartDocument },
+  result: {
+    data: {
+      shoppingCart: {
+        __typename: 'ShoppingCart',
+        id: btoa('ShoppingCart:1'),
+        totalPrice: 0,
+        numActionFigures: 0,
+      },
+    },
+  },
+};
+
+const mockShoppingCart = {
+  request: { query: GetShoppingCartDocument },
+  result: {
+    data: {
+      shoppingCart: {
+        __typename: 'ShoppingCart',
+        id: btoa('ShoppingCart:1'),
+        totalPrice: 10,
+        numActionFigures: 1,
+      },
+    },
+  },
+};
+```
