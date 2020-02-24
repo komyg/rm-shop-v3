@@ -23,7 +23,6 @@ export default function CharacterTable(props: Props): ReactElement {
   if (loading) {
     return <CircularProgress id='progress' />;
   } else if (error) {
-    console.error(error);
     return (
       <Typography variant='h5' id='error-msg'>
         Error retrieving data, please reload the page to try again.

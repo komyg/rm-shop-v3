@@ -44,6 +44,10 @@ configure({
 
 Also delete the *src/setupTests.ts* file if you have it.
 
+# Running the tests
+
+At any point in this tutorial you can execute the command `yarn test` to run the tests we've written so far. You can also add the file name to the end of this command to run a single test suite.
+
 # Testing the resolvers
 
 To test our resolvers, we are going to setup a mock Apollo Client and check the inputs and outputs from them. A good way see what comes in and out of a resolver is to use `console.log` statements and create the tests accordingly.
@@ -700,3 +704,7 @@ const mockShoppingCart = {
   },
 };
 ```
+
+# Conclusion
+
+You can now run all the tests by executing the command: `yarn test --watchAll`. If all goes well all of them should pass.

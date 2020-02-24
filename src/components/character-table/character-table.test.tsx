@@ -9,7 +9,7 @@ import waitForExpect from 'wait-for-expect';
 jest.mock('../character-data/character-data', () => ({
   __esModule: true,
   default: function CharacterData() {
-    return <div />;
+    return <tr />;
   },
 }));
 
@@ -17,7 +17,7 @@ describe('Character Table', () => {
   it('should show a spinner when loading the data', async () => {
     await act(async () => {
       const wrapper = mount(
-        <MockedProvider addTypename={false} mocks={[mockCharacters]}>
+        <MockedProvider addTypename={false} mocks={[mockCharacters]} resolvers={{}}>
           <CharacterTable />
         </MockedProvider>
       );
@@ -26,10 +26,10 @@ describe('Character Table', () => {
     });
   });
 
-  fit('should successfully dislay the character data', async () => {
+  it('should successfully dislay the character data', async () => {
     await act(async () => {
       const wrapper = mount(
-        <MockedProvider addTypename={false} mocks={[mockCharacters]}>
+        <MockedProvider addTypename={false} mocks={[mockCharacters]} resolvers={{}}>
           <CharacterTable />
         </MockedProvider>
       );
@@ -40,10 +40,40 @@ describe('Character Table', () => {
       });
     });
   });
+
+  it('should handle an error', async () => {
+    await act(async () => {
+      const wrapper = mount(
+        <MockedProvider addTypename={false} mocks={[mockWithError]} resolvers={{}}>
+          <CharacterTable />
+        </MockedProvider>
+      );
+
+      await waitForExpect(() => {
+        wrapper.update();
+        expect(wrapper).toContainMatchingElement('#error-msg');
+      });
+    });
+  });
+
+  it('should handle when there is no data', async () => {
+    await act(async () => {
+      const wrapper = mount(
+        <MockedProvider addTypename={false} mocks={[emtpyMock]} resolvers={{}}>
+          <CharacterTable />
+        </MockedProvider>
+      );
+
+      await waitForExpect(() => {
+        wrapper.update();
+        expect(wrapper).toContainMatchingElement('#no-data-msg');
+      });
+    });
+  });
 });
 
 const mockCharacters = {
-  request: { query: GetCharactersDocument, variables: {} },
+  request: { query: GetCharactersDocument },
   result: {
     data: {
       characters: {
@@ -89,6 +119,20 @@ const mockCharacters = {
           },
         ],
       },
+    },
+  },
+};
+
+const mockWithError = {
+  request: { query: GetCharactersDocument },
+  error: new Error('Network Error'),
+};
+
+const emtpyMock = {
+  request: { query: GetCharactersDocument },
+  result: {
+    data: {
+      characters: null,
     },
   },
 };
