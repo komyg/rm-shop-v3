@@ -43,10 +43,11 @@ describe('Character Table', () => {
 });
 
 const mockCharacters = {
-  request: { query: GetCharactersDocument },
+  request: { query: GetCharactersDocument, variables: {} },
   result: {
     data: {
       characters: {
+        __typename: 'Characters',
         results: [
           {
             id: '1',

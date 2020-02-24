@@ -27,11 +27,16 @@ export default function CharacterQuantity(props: Props): ReactElement {
 
   return (
     <Box display='flex' alignItems='center'>
-      <IconButton color='primary' disabled={props.chosenQuantity <= 0} onClick={onDecreaseQty}>
+      <IconButton
+        color='primary'
+        disabled={props.chosenQuantity <= 0}
+        onClick={onDecreaseQty}
+        id='decrease-btn'
+      >
         <ChevronLeftIcon />
       </IconButton>
       <Typography>{props.chosenQuantity}</Typography>
-      <IconButton color='primary' onClick={onIncreaseQty}>
+      <IconButton color='primary' onClick={onIncreaseQty} id='increase-btn'>
         <ChevronRightIcon />
       </IconButton>
     </Box>
