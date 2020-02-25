@@ -4,7 +4,7 @@ This is a three part tutorial series in which we will build a simple shopping ca
 
 - [Part 1: Retrieve and display data from a remote server.](https://dev.to/komyg/creating-an-app-using-react-and-apollo-graphql-1ine)
 - [Part 2: Use Apollo to manage the app's local state.](https://dev.to/komyg/use-apollo-to-manage-the-app-s-local-state-167f)
-- Part 3: Add unit tests.
+- [Part 3: Add unit tests.](https://dev.to/komyg/unit-tests-with-enzyme-and-apollo-graphql-5e7p)
 
 In this third part we will add unit tests to our components and our resolvers.
 
