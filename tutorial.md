@@ -1,12 +1,12 @@
 # Part 3: Adding Unit Tests
 
-This is a three part tutorial series in which we will build a simple shopping cart app using React and [Apollo Graphql](https://www.apollographql.com/):
+This is a three part tutorial series in which we will build a simple shopping cart app using React and [Apollo Graphql](https://www.apollographql.com/). The idea is to build a table in which the user can choose which Rick and Morty action figures he wants to buy.
 
 - [Part 1: Retrieve and display data from a remote server.](https://dev.to/komyg/creating-an-app-using-react-and-apollo-graphql-1ine)
 - [Part 2: Use Apollo to manage the app's local state.](https://dev.to/komyg/use-apollo-to-manage-the-app-s-local-state-167f)
 - Part 3: Add unit tests.
 
-On this third part we will add unit tests to our components and our resolvers.
+In this third part we will add unit tests to our components and our resolvers.
 
 >Note: usually I think that it is a good practice to write the tests at the same time as you are writing the code (see [TDD - Test Driven Development](https://en.wikipedia.org/wiki/Test-driven_development)), but I chose not do to this on this tutorial series, because I thought it would be clearer to separate the subjects.
 
@@ -24,7 +24,7 @@ After you cloned the repository, run `yarn install` to download the necessary pa
 
 # Configuring Enzyme
 
-In this tutorial we are going to use Enzime and Jest to run unit tests on our code. The Enzyme configuration below was taken from the Create React App [official documentation](https://create-react-app.dev/docs/running-tests).
+In this tutorial we are going to use Enzyme and Jest to run unit tests on our code. The Enzyme configuration below was taken from the Create React App [official documentation](https://create-react-app.dev/docs/running-tests).
 
 First let's add the necessary packages: `yarn add -D enzyme @types/enzyme enzyme-adapter-react-16 react-test-renderer jest-enzyme wait-for-expect`.
 
@@ -50,9 +50,9 @@ At any point in this tutorial you can execute the command `yarn test` to run the
 
 # Testing the resolvers
 
-To test our resolvers, we are going to setup a mock Apollo Client and check the inputs and outputs from them. A good way see what comes in and out of a resolver is to use `console.log` statements and create the tests accordingly.
+To test our resolvers, we are going to setup a mock Apollo Client and check the inputs and outputs from them. A good way to see what comes in and out of a resolver is to use `console.log` statements.
 
-## `setUnitPrice`
+## Set unit price
 
 The first resolver we are going to test is the `setUnitPrice`. Let's start by creating a test file: *resolvers/set-unit-price.resolver.test.ts* and then pasting the contents below on it:
 
@@ -87,9 +87,9 @@ describe('Set Unit Price Resolver', () => {
 
 The purpose of this resolver is to assign the price of 10 USD to Rick and Morty and 5 USD to everyone else. The way that Apollo does this, is by sending every new `Character` that comes from the backend through this resolver in the `root` param in order to get the `unitPrice` value. This is what we are reproducing in our test.
 
-In this case we don't need to setup a mock client for the test to work, however we are telling the compiler that the `mockCharacter` and the `context` are of the `any` type, so that the compiler won't complain that the `mockCharacter` is missing some properties and that we can't assign `null` to the context.
+In this case we don't need to setup a mock client for the test to work, however we are telling the compiler that the `mockCharacter` and the `context` are of the `any` type, so that it won't complain that the `mockCharacter` is missing some properties and that we can't assign `null` to the context.
 
-## `increaseChosenQuantity`
+## Increase chosen quantity
 
 Next we will test the `increaseChosenQuantity`. To do this, create the file *resolvers/increase-chosen-quantity.resolver.test.ts* and paste the contents below:
 
@@ -193,13 +193,15 @@ const mockData = {
 
 There is a lot going on in this file, so we are going to break it down:
 
-- First we begin by setting up a mock Apollo Client complete with a `fragmentMatcher`, an `InMemoryCache` and the resolver that we want to test. Note that both the client and the cache should have the same configurations as the real client, but with the `addTypename` property as false.
-- Then we `InMemoryCache` with a mock state by passing the `mockData` variable to the `cache.writeData` function. It is important to mention that all fields that are part of any query, fragment or mutation that is ran on this test, must be present on the mock data, otherwise the Apollo will throw an error. For example, if we omit the character's `name` parameter in the `mockData`, then the Apollo will throw an error, because the `characterData` fragment that is used inside the `increaseChosenQuantity` resolver contains this field.
-- Once the cache is initialized, we run two tests to see if the `Character` and the `ShoppingCart` are being successfully updated in the cache when the mutation is ran an the resolver is called.
+First we begin by setting up a mock Apollo Client complete with a `fragmentMatcher`, an `InMemoryCache` and the resolver that we want to test. Note that both the client and the cache should have the same configurations as the real client, but with the `addTypename` property as false.
 
-## `decreateChosenQuantity`
+Then we initialize the `InMemoryCache` with a mock state by passing the `mockData` variable to the `cache.writeData` function. It is important to mention that all fields that are part of any query, fragment or mutation that is ran on this test, must be present on the mock data, otherwise the Apollo will throw an error. For example, if we omit the character's `name` parameter in the `mockData`, then the Apollo will throw an error, because the `characterData` fragment that is used inside the `increaseChosenQuantity` resolver contains this field.
 
-Next, let's create a test for the `decreseChosenQuantity` resolver. Start by creating the file: *resolvers/decrease-chosen-quantity.resolver.test.ts* and pasting the contents below:
+Once the cache is initialized, we run two tests to see if the `Character` and the `ShoppingCart` are being successfully updated when the mutation is ran.
+
+## Decrease chosen quantity
+
+Next, let's create a test for the `decreaseChosenQuantity` resolver. Start by creating the file: *resolvers/decrease-chosen-quantity.resolver.test.ts* and pasting the contents below:
 
 ```ts
 import { InMemoryCache, IntrospectionFragmentMatcher } from 'apollo-cache-inmemory';
@@ -333,9 +335,9 @@ const mockData = {
 };
 ```
 
-This test is very similar to the one we created for the `increaseChosenQuantity` resolver, but in this case the cache starts with an action figure that has already been selected by the user. Also we added two more tests to make sure that we will not decrease the quantities and the price to a value that is less than 0.
+This test is very similar to the one we created for the `increaseChosenQuantity` resolver, but in this case the cache starts with an action figure that has already been selected by the user. Also we added two more tests to make sure that we will not decrease the quantities and the price to less than 0.
 
-## `getCharacter`
+## Get character
 
 Finally, let's add a test for the last resolver: `getCharacter`. Create a new file *resolvers/get-character.resolver.test.ts* and paste the contents below:
 
@@ -411,7 +413,7 @@ This test just runs the query through the Apollo and checks the result.
 
 Now let's begin testing the components themselves.
 
-## `App`
+## App component
 
 First let's begin with the `App` component. Create the file: *components/app/app.test.tsx* and paste the contents below:
 
@@ -430,7 +432,7 @@ describe('App Component', () => {
 
 This test is just a [smoke test](https://en.wikipedia.org/wiki/Smoke_testing_(software)) to see if anything will break if we mount this component. Since this component doesn't do much else besides instating other components, just this smoke test is enough.
 
-## `CharacterData`
+## Character data component
 
 Now let's also create a smoke test fo the `CharacterData` component in the file: *components/character-data/character-data.test.tsx*:
 
@@ -467,13 +469,13 @@ const mockCharacter: any = {
 };
 ```
 
-In both tests above, we are using Enzyme's `shallow`. By using it, we are telling Enzyme that we just want to mount the component that we are passing to it. It can and will ignore all subcomponents. This is why we don't have to bother on creating mocks for the children of these two components.
+In both tests above, we are using Enzyme's `shallow`. By using it, we are telling Enzyme that we just want to mount the top level component. It can and will ignore all sub-components. This is why we don't have to bother on creating mocks for the children of these two components.
 
 ## The Apollo Mocked Provider
 
-For the next components that we will test we will require the `ApolloMockedProvider` to simulate graphql queries and mutations. The `ApolloMockedProvider` is available on a separate package: `yarn add -D @apollo/react-testing`.
+For the next components that we will test we will need the [ApolloMockedProvider](https://www.apollographql.com/docs/react/development-testing/testing/#mockedprovider) to simulate graphql queries and mutations. The `ApolloMockedProvider` is available on a separate package: `yarn add -D @apollo/react-testing`.
 
-## `CharacterTable`
+## Character table component
 
 Now, let's create a new test for the `CharacterTable` component. Since it contains a graphql query, we will need to use the `MockedProvider` to simulate the graphql elements.
 
@@ -530,7 +532,7 @@ describe('Character Table', () => {
     expect(wrapper).toContainMatchingElement('#progress');
   });
 
-  it('should successfully dislay the character data', async () => {
+  it('should successfully display the character data', async () => {
     let wrapper: ReactWrapper;
     await act(async () => {
       // Mount the component
@@ -570,7 +572,7 @@ describe('Character Table', () => {
 
     await act(async () => {
       wrapper = mount(
-        <MockedProvider addTypename={false} mocks={[emtpyMock]} resolvers={{}}>
+        <MockedProvider addTypename={false} mocks={[emptyMock]} resolvers={{}}>
           <CharacterTable />
         </MockedProvider>
       );
@@ -639,7 +641,7 @@ const mockWithError = {
   error: new Error('Network Error'),
 };
 
-const emtpyMock = {
+const emptyMock = {
   request: { query: GetCharactersDocument },
   result: {
     data: {
@@ -651,24 +653,39 @@ const emtpyMock = {
 
 There is quite a bit going on in this file, so let's break it down:
 
-- First we created a mock of the `CharacterData` component, to make sure that we are testing the `CharacterTable` component in isolation (it is important to do this, because we are using `mount` instead of `shallow`, this way the whole component tree will be mounted).
-- Notice that the mock itself contains a `default` property which returns an functional component, this is because the `CharacterData` component is exported as the module default (`export default function CharacterData`), so we mock this using the `default` parameter.
-- Then we have our first test that checks if we show a spinner while loading the data from the graphql server. We do this, by mounting the whole component wrapped by the `MockedProvider`. Notice that we used `mount` instead of `shallow`, this is because the `shallow` function would only mount the first level component, which in this case is the `MockedProvider`, so we use `mount` to mount the whole component tree.
-- In this test, we don't have to pass any mocks to it, because we are not waiting for them to be resolved. We just want to see if the spinner will be shown when the query is loading.
-- After this we have a test that checks if we display the `CharacterData` components if our data loads successfully (keep in mind that this is not the real `CharacterData` component, but rather our mock).
-- In this test, we configure a mock which contains the expected input and output data that is handled by the Apollo graphql.
-- Here we also use the [wait](https://github.com/wesbos/waait) function make sure our mock resolves so we can make assertions, otherwise we would only see the loading spinner.
-- We have two more tests, on that checks if we can gracefully handle an error and the other when there is no data available (notice that the error mock has an `error` parameter instead of a `result` parameter).
-- At the end of the file, we have our mocks. In here, the same rule we applied with resolvers is valid: all of the fields that you requested in a query or a mutation must be returned in the mock. If a single field is missing, Apollo will throw an error.
-- You can take a look at [Apollo's official documentation](https://www.apollographql.com/docs/react/development-testing/testing/) if you want to know more about the tests.
+### Test setup
 
->Note: in this test suite it is very impotant to set the `resolver` param in the `MockedProvider`, even if it is just an empty object. This is because our query has two `@client` fields (`chosenQuantity` and `unitPrice`) and if we don't set the `resolver` param, the `MockedProvider` will always throw a **ApolloError: Network error: No more mocked responses for the query: query GetCharacters** error.
+First we created a mock of the `CharacterData` component, to make sure that we are testing the `CharacterTable` component in isolation (it is important to do this, because we are using `mount` instead of `shallow`, this way the whole component tree will be mounted).
+
+Notice that the mock itself contains a `default` property which returns an functional component, this is because the `CharacterData` component is exported as the module default (`export default function CharacterData`), so we mock this by using the `default` parameter.
+
+### Should show a spinner when loading the data
+
+Our first test checks if we show a spinner while loading the data from the graphql server. We do this, by mounting the whole component wrapped by the `MockedProvider`. Notice that we used `mount` instead of `shallow`, this is because the `shallow` function would only mount the first level component, which in this case is the `MockedProvider`, so we use `mount` to mount the whole component tree.
+
+In this test, we don't have to pass any mocks to it, because we are not waiting for them to be resolved. We just want to see if the spinner will be shown when the query is loading.
+
+### Should successfully display the character data
+
+In this test we check if we display the `CharacterData` components if our data loads successfully (keep in mind that this is not the real `CharacterData` component, but rather our mock). In order to do this, we had to configure a mock which contains the expected input and output data that is handled by the Apollo graphql.
+
+Here we also use the [wait](https://github.com/wesbos/waait) function make sure our mock resolves so we can make assertions, otherwise we would only see the loading spinner.
+
+### Other tests
+
+We have two more tests, one that checks if we can gracefully handle an error and the other when there is no data available (notice that the error mock has an `error` parameter instead of a `result` parameter).
+
+At the end of the file, we have our mocks. In here, the same rule we applied with resolvers is valid: all of the fields that you requested in a query or a mutation must be returned in the mock. If a single field is missing, Apollo will throw an error.
+
+You can take a look at [Apollo's official documentation](https://www.apollographql.com/docs/react/development-testing/testing/) if you want to know more about the tests.
+
+>Note: in this test suite it is very important to set the `resolver` param in the `MockedProvider`, even if it is just an empty object. This is because our query has two `@client` fields (`chosenQuantity` and `unitPrice`) and if we don't set it, the `MockedProvider` will always throw a **ApolloError: Network error: No more mocked responses for the query: query GetCharacters** error.
 
 >Note 2: in some tests we need to use the [act](https://reactjs.org/docs/test-utils.html#act) function to make sure our component's state is correct before making any assertions.
 
-## `CharacterQuantity`
+## Character quantity component
 
-In this component, we would like to test that a mutation to increase or decrease the character's quantity is called whenever we click one of the buttons. First let's add an `id` property to both so that we can test them more easily, by changing the *components/character-quantity/character-quantity.tsx* component:
+In this component, we would like to test that a mutation to increase or decrease the character's quantity is called whenever we click one of the buttons. First let's add an `id` property to both so that we can test them more easily. Change the *components/character-quantity/character-quantity.tsx* file:
 
 ```tsx
 <IconButton color='primary' disabled={props.chosenQuantity <= 0} onClick={onDecreaseQty} id='decrease-btn'>
@@ -680,7 +697,7 @@ In this component, we would like to test that a mutation to increase or decrease
 </IconButton>
 ```
 
-Now, create the file: *components/character-quantity/character-quantity.test.tsx and paste the contents below:
+Now, create the file: *components/character-quantity/character-quantity.test.tsx* and paste the contents below:
 
 ```tsx
 import React from 'react';
@@ -779,10 +796,11 @@ describe('Character Quantity', () => {
 
 Let's breakdown this test:
 
-- Notice that we've added a function as the result value of both mutations instead of plain objects. The Apollo `MockedProvider` supports either objects, functions and promises as the `result` property. This way we can test if the mutation was called.
-- Since just like queries, mutations are also executed asynchronously, here we also use the `await wait(0);` function (after we clicked on the increase or decrease button) to wait until our mutation has finished executing.
+We've added a function as the result value of both mutations instead of plain objects. The Apollo `MockedProvider` supports either objects, functions and promises as the `result` property. This way we can test if the mutation was called.
 
-## `ShoppingCart`
+Just like queries, mutations are also executed asynchronously, so we use the `await wait(0);` function (after we clicked on the increase or decrease button) to wait until our mutation has finished executing.
+
+## Shopping cart component
 
 For this component, we are going to check if it appears when we have one or more action figures selected. To simplify our tests open the file *components/shopping-cart-btn/shopping-cart-btn.tsx* and add `id` param to the `<Box />` that is returned when there are no action figures selected:
 
@@ -817,7 +835,7 @@ describe('Shopping Cart Btn', () => {
     let wrapper: ReactWrapper;
     await act(async () => {
       wrapper = mount(
-        <MockedProvider addTypename={false} mocks={[mockEmtpyCart]}>
+        <MockedProvider addTypename={false} mocks={[mockEmptyCart]}>
           <ShoppingCartBtn />
         </MockedProvider>
       );
@@ -849,7 +867,7 @@ describe('Shopping Cart Btn', () => {
   });
 });
 
-const mockEmtpyCart = {
+const mockEmptyCart = {
   request: { query: GetShoppingCartDocument },
   result: {
     data: {
@@ -878,7 +896,7 @@ const mockShoppingCart = {
 };
 ```
 
-This test is similar to the other ones we've written so far: we use `await wait(0);` to wait for the query execution, and then we check if we are showing the results currectly.
+This test is similar to the other ones we've written so far: we use `await wait(0);` to wait for the query execution, then we check if we are showing the results correctly.
 
 # Conclusion
 

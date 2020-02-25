@@ -10,7 +10,7 @@ describe('Shopping Cart Btn', () => {
     let wrapper: ReactWrapper;
     await act(async () => {
       wrapper = mount(
-        <MockedProvider addTypename={false} mocks={[mockEmtpyCart]}>
+        <MockedProvider addTypename={false} mocks={[mockEmptyCart]}>
           <ShoppingCartBtn />
         </MockedProvider>
       );
@@ -42,7 +42,7 @@ describe('Shopping Cart Btn', () => {
   });
 });
 
-const mockEmtpyCart = {
+const mockEmptyCart = {
   request: { query: GetShoppingCartDocument },
   result: {
     data: {

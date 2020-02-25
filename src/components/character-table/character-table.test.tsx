@@ -27,7 +27,7 @@ describe('Character Table', () => {
     expect(wrapper).toContainMatchingElement('#progress');
   });
 
-  it('should successfully dislay the character data', async () => {
+  it('should successfully display the character data', async () => {
     let wrapper: ReactWrapper;
     await act(async () => {
       // Mount the component
@@ -67,7 +67,7 @@ describe('Character Table', () => {
 
     await act(async () => {
       wrapper = mount(
-        <MockedProvider addTypename={false} mocks={[emtpyMock]} resolvers={{}}>
+        <MockedProvider addTypename={false} mocks={[emptyMock]} resolvers={{}}>
           <CharacterTable />
         </MockedProvider>
       );
@@ -136,7 +136,7 @@ const mockWithError = {
   error: new Error('Network Error'),
 };
 
-const emtpyMock = {
+const emptyMock = {
   request: { query: GetCharactersDocument },
   result: {
     data: {
