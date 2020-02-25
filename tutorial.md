@@ -484,7 +484,6 @@ To start, update the `CharacterTable` component in the *components/character-tab
 if (loading) {
   return <CircularProgress id='progress' />;
 } else if (error) {
-  console.error(error);
   return (
     <Typography variant='h5' id='error-msg'>
       Error retrieving data, please reload the page to try again.
