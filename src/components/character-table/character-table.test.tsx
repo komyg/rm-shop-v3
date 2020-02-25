@@ -1,10 +1,9 @@
 import React from 'react';
 import { mount, ReactWrapper } from 'enzyme';
 import CharacterTable from './character-table';
-import { MockedProvider } from '@apollo/react-testing';
+import { MockedProvider, wait } from '@apollo/react-testing';
 import { act } from 'react-dom/test-utils';
 import { GetCharactersDocument } from '../../generated/graphql';
-import waitForExpect from 'wait-for-expect';
 
 jest.mock('../character-data/character-data', () => ({
   __esModule: true,
@@ -31,17 +30,19 @@ describe('Character Table', () => {
   it('should successfully dislay the character data', async () => {
     let wrapper: ReactWrapper;
     await act(async () => {
+      // Mount the component
       wrapper = mount(
         <MockedProvider addTypename={false} mocks={[mockCharacters]} resolvers={{}}>
           <CharacterTable />
         </MockedProvider>
       );
+
+      // Wait until the query is resolved
+      await wait(0);
+      wrapper.update();
     });
 
-    await waitForExpect(() => {
-      wrapper.update();
-      expect(wrapper).toContainMatchingElement('CharacterData');
-    });
+    expect(wrapper!).toContainMatchingElement('CharacterData');
   });
 
   it('should handle an error', async () => {
@@ -53,12 +54,12 @@ describe('Character Table', () => {
           <CharacterTable />
         </MockedProvider>
       );
+
+      await wait(0);
+      wrapper.update();
     });
 
-    await waitForExpect(() => {
-      wrapper.update();
-      expect(wrapper).toContainMatchingElement('#error-msg');
-    });
+    expect(wrapper!).toContainMatchingElement('#error-msg');
   });
 
   it('should handle when there is no data', async () => {
@@ -70,12 +71,12 @@ describe('Character Table', () => {
           <CharacterTable />
         </MockedProvider>
       );
+
+      await wait(0);
+      wrapper.update();
     });
 
-    await waitForExpect(() => {
-      wrapper.update();
-      expect(wrapper).toContainMatchingElement('#no-data-msg');
-    });
+    expect(wrapper!).toContainMatchingElement('#no-data-msg');
   });
 });
 

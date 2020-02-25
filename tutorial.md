@@ -505,10 +505,9 @@ Now create the file *components/character-table/character-table.spec.tsx* and pa
 import React from 'react';
 import { mount, ReactWrapper } from 'enzyme';
 import CharacterTable from './character-table';
-import { MockedProvider } from '@apollo/react-testing';
+import { MockedProvider, wait } from '@apollo/react-testing';
 import { act } from 'react-dom/test-utils';
 import { GetCharactersDocument } from '../../generated/graphql';
-import waitForExpect from 'wait-for-expect';
 
 jest.mock('../character-data/character-data', () => ({
   __esModule: true,
@@ -535,17 +534,19 @@ describe('Character Table', () => {
   it('should successfully dislay the character data', async () => {
     let wrapper: ReactWrapper;
     await act(async () => {
+      // Mount the component
       wrapper = mount(
         <MockedProvider addTypename={false} mocks={[mockCharacters]} resolvers={{}}>
           <CharacterTable />
         </MockedProvider>
       );
+
+      // Wait until the query is resolved
+      await wait(0);
+      wrapper.update();
     });
 
-    await waitForExpect(() => {
-      wrapper.update();
-      expect(wrapper).toContainMatchingElement('CharacterData');
-    });
+    expect(wrapper!).toContainMatchingElement('CharacterData');
   });
 
   it('should handle an error', async () => {
@@ -557,12 +558,12 @@ describe('Character Table', () => {
           <CharacterTable />
         </MockedProvider>
       );
+
+      await wait(0);
+      wrapper.update();
     });
 
-    await waitForExpect(() => {
-      wrapper.update();
-      expect(wrapper).toContainMatchingElement('#error-msg');
-    });
+    expect(wrapper!).toContainMatchingElement('#error-msg');
   });
 
   it('should handle when there is no data', async () => {
@@ -574,12 +575,12 @@ describe('Character Table', () => {
           <CharacterTable />
         </MockedProvider>
       );
+
+      await wait(0);
+      wrapper.update();
     });
 
-    await waitForExpect(() => {
-      wrapper.update();
-      expect(wrapper).toContainMatchingElement('#no-data-msg');
-    });
+    expect(wrapper!).toContainMatchingElement('#no-data-msg');
   });
 });
 
@@ -651,20 +652,20 @@ const emtpyMock = {
 
 There is quite a bit going on in this file, so let's break it down:
 
-- First we created a mock of the `CharacterData` component. We've done this to make sure that we are testing the `CharacterTable` component in isolation.
-- The mock itself contains `default` parameter, because the `CharacterData` component is exported as the module default (`export default function CharacterData`).
-- Then we have our first test that checks if we show a spinner while loading the data from the graphql server. We do this, by mounting the whole component wrapped by the `MockedProvider`. Notice that we used `mount` instead of `shallow`, this is because the `shallow` function would only mount the first level component, which in this case is the `MockedProvider`, so we use `mount` to mount the whole component tree. This is also why we mocked the `CharacterData` component, because the `mount` function would also mount it and we want to test our components in isolation.
+- First we created a mock of the `CharacterData` component, to make sure that we are testing the `CharacterTable` component in isolation (it is important to do this, because we are using `mount` instead of `shallow`, this way the whole component tree will be mounted).
+- Notice that the mock itself contains a `default` property which returns an functional component, this is because the `CharacterData` component is exported as the module default (`export default function CharacterData`), so we mock this using the `default` parameter.
+- Then we have our first test that checks if we show a spinner while loading the data from the graphql server. We do this, by mounting the whole component wrapped by the `MockedProvider`. Notice that we used `mount` instead of `shallow`, this is because the `shallow` function would only mount the first level component, which in this case is the `MockedProvider`, so we use `mount` to mount the whole component tree.
 - In this test, we don't have to pass any mocks to it, because we are not waiting for them to be resolved. We just want to see if the spinner will be shown when the query is loading.
-- Also notice that when we are making changes to our components, we are using the [act](https://reactjs.org/docs/testing-recipes.html#act) function.
 - After this we have a test that checks if we display the `CharacterData` components if our data loads successfully (keep in mind that this is not the real `CharacterData` component, but rather our mock).
-- In this test, we configure a mock which contains the expected input and output data that is handled by the graphql.
-- Here we also use the `waitForExpect` function to wait until the mocks resolve before making any assertions, otherwise we would only see the loading spinner.
-- We have two more tests, that check if we can gracefully handle an error and when there is no data available (notice that the error mock has an `error` parameter instead of a `result` parameter).
-- At the end of the file, we have our mocks. In here, the same rule we applied with resolvers tests is valid: all of the fields that you requested in a query or a mutation must be returned in the mock. If a single field is missing, Apollo will throw an error.
+- In this test, we configure a mock which contains the expected input and output data that is handled by the Apollo graphql.
+- Here we also use the [wait](https://github.com/wesbos/waait) function make sure our mock resolves so we can make assertions, otherwise we would only see the loading spinner.
+- We have two more tests, on that checks if we can gracefully handle an error and the other when there is no data available (notice that the error mock has an `error` parameter instead of a `result` parameter).
+- At the end of the file, we have our mocks. In here, the same rule we applied with resolvers is valid: all of the fields that you requested in a query or a mutation must be returned in the mock. If a single field is missing, Apollo will throw an error.
 - You can take a look at [Apollo's official documentation](https://www.apollographql.com/docs/react/development-testing/testing/) if you want to know more about the tests.
 
 >Note: in this test suite it is very impotant to set the `resolver` param in the `MockedProvider`, even if it is just an empty object. This is because our query has two `@client` fields (`chosenQuantity` and `unitPrice`) and if we don't set the `resolver` param, the `MockedProvider` will always throw a **ApolloError: Network error: No more mocked responses for the query: query GetCharacters** error.
 
+>Note 2: in some tests we need to use the [act](https://reactjs.org/docs/test-utils.html#act) function to make sure our component's state is correct before making any assertions.
 
 ## `CharacterQuantity`
 
@@ -684,15 +685,14 @@ Now, create the file: *components/character-quantity/character-quantity.test.tsx
 
 ```tsx
 import React from 'react';
-import { mount } from 'enzyme';
+import { mount, ReactWrapper } from 'enzyme';
 import CharacterQuantity from './character-quantity';
-import { MockedProvider } from '@apollo/react-testing';
+import { MockedProvider, wait } from '@apollo/react-testing';
 import { act } from 'react-dom/test-utils';
 import {
   IncreaseChosenQuantityDocument,
   DecreaseChosenQuantityDocument,
 } from '../../generated/graphql';
-import waitForExpect from 'wait-for-expect';
 
 describe('Character Quantity', () => {
   it('should mount', () => {
@@ -705,55 +705,60 @@ describe('Character Quantity', () => {
   });
 
   it('should call a mutation when increasing a character quantity', async () => {
+    let wrapper: ReactWrapper;
+
+    // Grapqhl mock
     const mockIncreaseQuantity = {
       request: { query: IncreaseChosenQuantityDocument, variables: { input: { id: '1' } } },
       result: jest.fn().mockReturnValue({ data: { increaseChosenQuantity: true } }),
     };
 
     await act(async () => {
-      const wrapper = mount(
+      // Mount
+      wrapper = mount(
         <MockedProvider addTypename={false} mocks={[mockIncreaseQuantity]}>
           <CharacterQuantity characterId='1' chosenQuantity={0} />
         </MockedProvider>
       );
-      expect(wrapper).toBeTruthy();
 
+      // Simulate button click
       wrapper
         .find('#increase-btn')
         .first()
         .simulate('click');
 
-      await waitForExpect(() => {
-        wrapper.update();
-        expect(mockIncreaseQuantity.result).toHaveBeenCalled();
-      });
+      // Wait until the mutation is called
+      await wait(0);
     });
+
+    // Check if the mutation was actually called.
+    expect(mockIncreaseQuantity.result).toHaveBeenCalled();
   });
 
   it('should call a mutation when decreasing a character quantity', async () => {
+    let wrapper: ReactWrapper;
+
     const mockDecreaseQuantity = {
       request: { query: DecreaseChosenQuantityDocument, variables: { input: { id: '1' } } },
       result: jest.fn().mockReturnValue({ data: { increaseChosenQuantity: true } }),
     };
 
     await act(async () => {
-      const wrapper = mount(
+      wrapper = mount(
         <MockedProvider addTypename={false} mocks={[mockDecreaseQuantity]}>
           <CharacterQuantity characterId='1' chosenQuantity={2} />
         </MockedProvider>
       );
-      expect(wrapper).toBeTruthy();
 
       wrapper
         .find('#decrease-btn')
         .first()
         .simulate('click');
 
-      await waitForExpect(() => {
-        wrapper.update();
-        expect(mockDecreaseQuantity.result).toHaveBeenCalled();
-      });
+      await wait(0);
     });
+
+    expect(mockDecreaseQuantity.result).toHaveBeenCalled();
   });
 
   it('should disable the decrease quantity button when the character quantity is 0', () => {
@@ -773,7 +778,10 @@ describe('Character Quantity', () => {
 });
 ```
 
-Notice that we've added a function as the result value of both mutations instead of plain objects. The Apollo `MockedProvider` supports either objects, functions and promises as the `result` property.
+Let's breakdown this test:
+
+- Notice that we've added a function as the result value of both mutations instead of plain objects. The Apollo `MockedProvider` supports either objects, functions and promises as the `result` property. This way we can test if the mutation was called.
+- Since just like queries, mutations are also executed asynchronously, here we also use the `await wait(0);` function (after we clicked on the increase or decrease button) to wait until our mutation has finished executing.
 
 ## `ShoppingCart`
 
@@ -795,49 +803,50 @@ return (
 );
 ```
 
-Now create a new file: *components/shopping-cart-btn/shopping-cart-btn.test.tsx*  and paste the contents below:
+Now create a new file: *components/shopping-cart-btn/shopping-cart-btn.test.tsx* and paste the contents below:
 
 ```tsx
 import React from 'react';
 import { act } from 'react-dom/test-utils';
 import { GetShoppingCartDocument } from '../../generated/graphql';
-import { mount } from 'enzyme';
+import { mount, ReactWrapper } from 'enzyme';
 import { MockedProvider, wait } from '@apollo/react-testing';
 import ShoppingCartBtn from './shopping-cart-btn';
-import waitForExpect from 'wait-for-expect';
 
 describe('Shopping Cart Btn', () => {
   it('should not show the button when there are 0 action figures selected', async () => {
+    let wrapper: ReactWrapper;
     await act(async () => {
-      const wrapper = mount(
+      wrapper = mount(
         <MockedProvider addTypename={false} mocks={[mockEmtpyCart]}>
           <ShoppingCartBtn />
         </MockedProvider>
       );
-      expect(wrapper).toBeTruthy();
 
-      await wait(10);
+      await wait(0);
       wrapper.update();
-      expect(wrapper).toContainMatchingElement('#empty-btn');
-      expect(wrapper).not.toContainMatchingElement('#shopping-cart-btn');
     });
+
+    expect(wrapper!).toContainMatchingElement('#empty-btn');
+    expect(wrapper!).not.toContainMatchingElement('#shopping-cart-btn');
   });
 
   it('should show the button when there is 1 or more action figures selected', async () => {
+    let wrapper: ReactWrapper;
+
     await act(async () => {
-      const wrapper = mount(
+      wrapper = mount(
         <MockedProvider addTypename={false} mocks={[mockShoppingCart]}>
           <ShoppingCartBtn />
         </MockedProvider>
       );
-      expect(wrapper).toBeTruthy();
 
-      await waitForExpect(() => {
-        wrapper.update();
-        expect(wrapper).not.toContainMatchingElement('#empty-btn');
-        expect(wrapper).toContainMatchingElement('#shopping-cart-btn');
-      });
+      await wait(0);
+      wrapper.update();
     });
+
+    expect(wrapper!).not.toContainMatchingElement('#empty-btn');
+    expect(wrapper!).toContainMatchingElement('#shopping-cart-btn');
   });
 });
 
@@ -869,6 +878,8 @@ const mockShoppingCart = {
   },
 };
 ```
+
+This test is similar to the other ones we've written so far: we use `await wait(0);` to wait for the query execution, and then we check if we are showing the results currectly.
 
 # Conclusion
 
