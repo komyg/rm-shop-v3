@@ -12,7 +12,7 @@ In this third part we will add unit tests to our components and our resolvers.
 
 This tutorial builds on top of the code generated in the Part 2. [You can get it here](https://github.com/komyg/rm-shop-v2).
 
-The complete code for the Part 3 is available in [this repository](https://github.com/komyg/rm-shop-v3).
+The complete code for the Part 3 is available in [this repository](https://github.com/komyg/rm-shop-v3) and the website here: https://komyg.github.io/rm-shop-v3/.
 
 >Note: this tutorial assumes that you have a working knowledge of React and Typescript.
 
